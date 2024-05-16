@@ -1,18 +1,15 @@
-using API.Data;
-using Microsoft.EntityFrameworkCore;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using API.Extensions;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
-// add DataContext as a service, so that we can inject into other parts of the application
-builder.Services. AddDbContext<DataContext>(opt => 
-{
-    opt.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
-builder.Services.AddCors();
-
+builder.Services.AddApplicationServices(builder.Configuration); // some application services have been moved into extensions
+builder.Services.AddIdentityServices(builder.Configuration); // some authentication services have been moved into extensions
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -20,7 +17,9 @@ app.UseCors(builder => builder.AllowAnyHeader().AllowAnyMethod().WithOrigins("ht
 
 app.UseHttpsRedirection();
 
-app.UseAuthorization();
+// following 2 are middlewares to authenticate and authorise user
+app.UseAuthentication(); // check whether the user has valid token
+app.UseAuthorization(); // check what the user can do with the token
 
 app.MapControllers();
 

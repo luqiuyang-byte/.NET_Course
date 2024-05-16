@@ -1,17 +1,25 @@
 ﻿using System.Reflection.Metadata.Ecma335;
 using API.Data;
 using API.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using SQLitePCL;
 
 namespace API.Controllers;
-
+// Below are controllers
+// Every controller will need the [ApiController] attribute
+// Every controller need route
+// Every controller need to derive from the ControllerBase class. (after change now it derives from BaseApiController class)
+// However you can write your own base class as well, that's BaseApiController.cs we added into Controllers folder
 [ApiController]
 [Route("api/[controller]")] // to access this controller: https://localhost:5001/api/users where "users" is the first part of the class
-public class UsersController : ControllerBase
+[Authorize] // User can access these endpoints only if they are authorised
+// There are other declarations like [AllowAnonymous] that enables anyone to access a endpoint, this overrides any other [Authorize] reqirement. So should only be used at low level
+public class UsersController : BaseApiController
 
 {
+
     private readonly DataContext _context;
 
     //this is a constructor
@@ -21,6 +29,7 @@ public class UsersController : ControllerBase
         //because we added the .editorconfig file, this formatting is automatically applied
         //in normal case, we would name our private field "context", then the above line should be "this.context = context"
     }
+
     // these are http end points
     // This is a simple single-threaded synchoronized request where one quert has to be completed before the next request can come in. We need to re-structure (Asynchronize) it so that it can do multi-threads at the same time.
     /*
@@ -50,6 +59,7 @@ public class UsersController : ControllerBase
     //4. used async version of function in entity framework "ToListAsync()" and "FindAsync()"
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<AppUser>>> GetUsers()
     {
         var users = await _context.Users.ToListAsync();
